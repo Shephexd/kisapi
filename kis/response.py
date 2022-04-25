@@ -4,6 +4,10 @@ from pydantic import BaseModel, Field, validator
 
 
 class APIResponse(BaseModel):
+    return_code: str = Field(alias="rt_cd", description="0: 성공, 0 이외의 값: 실패", repr=False)
+    message: str = Field(alias="msg1", description="응답 메시지")
+    message_code: str = Field(alias="msg_cd", description="응답 코드", repr=False)
+
     @classmethod
     def get_first(cls, v: list or dict):
         if isinstance(v, list) and v:
@@ -21,9 +25,9 @@ class DomesticBalanceResponse(APIResponse):
         buy_qty: str = Field(alias="thdt_buyqty", description="금일매수수량")
         sell_qty: str = Field(alias="thdt_sll_qty", description="금일매도수량")
         holding_qty: str = Field(alias="hldg_qty", description="보유수량")
-        ord_qty: str = Field(alias="ord_psbl_qty", description="주문가능수량")
+        ord_possible_qty: str = Field(alias="ord_psbl_qty", description="주문가능수량")
         avg_price: str = Field(alias="pchs_avg_pric", description="매입평균가격")
-        purchase_amount: str = Field(alias="pchs_amt", description="매입금액")
+        purchase_amt: str = Field(alias="pchs_amt", description="매입금액")
         price: str = Field(alias="prpr", description="현재가")
         eval_amt: str = Field(alias="evlu_amt", description="평가금액")
         profit_loss: str = Field(alias="evlu_pfls_amt", description="평가손익금액")
@@ -59,9 +63,6 @@ class DomesticBalanceResponse(APIResponse):
 
     holdings: List[HoldingDetail] = Field(alias="output1")
     balance: Union[BalanceDetail, List[BalanceDetail]] = Field(alias="output2")
-    return_code: str = Field(alias="rt_cd", description="", repr=False)
-    message: str = Field(alias="msg1")
-    message_code: str = Field(alias="msg_cd", repr=False)
 
     @validator("message", "search_key", "next_key")
     def strip_str(cls, v: str):
@@ -73,4 +74,32 @@ class DomesticBalanceResponse(APIResponse):
 
 
 class OverseaBalanceResponse(APIResponse):
-    pass
+    class HoldingDetail(BaseModel):
+        symbol: str = Field(alias="ovrs_pdno", description="상품번호")
+        name: str = Field(alias="ovrs_item_name", description="상품명", repr=False)
+        profit_loss: Decimal = Field(alias="frcr_evlu_pfls_amt", description="외화평가손익금액")
+        profit_loss_ratio: Decimal = Field(alias="evlu_pfls_rt", description="평가손익률")
+        purchase_avg_price: Decimal = Field(alias="pchs_avg_pric", description="해당 종목의 매수 평균 단가")
+        holding_qty: Decimal = Field(alias="ovrs_cblc_qty", description="잔고수량")
+        ord_possible_qty: Decimal = Field(alias="ord_psbl_qty", description="매도 가능한 주문 수량")
+        purchase_amt: Decimal = Field(alias="frcr_pchs_amt1", description="해당 종목의 외화 기준 매입금액")
+        eval_amt: Decimal = Field(alias="ovrs_stck_evlu_amt", description="평가금액")
+        price: Decimal = Field(alias="now_pric2", description="현재가격")
+        currency_code: str = Field(alias="tr_crcy_cd", description="거래통화코드")
+
+    class BalanceDetail(BaseModel):
+        foreign_purchase_amt: Decimal = Field(alias="frcr_pchs_amt1", description="외화매입금액1")
+        realized_profit_loss: Decimal = Field(alias="ovrs_rlzt_pfls_amt", description="해외실현손익금액")
+        total_profit_loss: Decimal = Field(alias="ovrs_tot_pfls", description="해외총손익")
+        realized_return: Decimal = Field(alias="rlzt_erng_rt", description="실현수익률")
+        total_eval_profit_loss_amt: Decimal = Field(alias="tot_evlu_pfls_amt", description="총푱가손익금액")
+        total_return: Decimal = Field(alias="tot_pftrt", description="총수익률")
+        exchange_amt: Decimal = Field(alias="frcr_buy_amt_smtl1", description="외화매수금액합계1")
+        realized_profit_loss2: Decimal = Field(alias="ovrs_rlzt_pfls_amt2", description="해외실현손익금액2")
+        exchange_amt2: Decimal = Field(alias="frcr_buy_amt_smtl2", description="외화매수금액합계2")
+
+    search_key: str = Field(alias="ctx_area_fk200", description="연속조회검색조건", repr=False)
+    next_key: str = Field(alias="ctx_area_nk200", description="연속조회키", repr=False)
+
+    holdings: List[HoldingDetail] = Field(alias="output1")
+    balance: BalanceDetail = Field(alias="output2")
