@@ -103,3 +103,28 @@ class OverseaBalanceResponse(APIResponse):
 
     holdings: List[HoldingDetail] = Field(alias="output1")
     balance: BalanceDetail = Field(alias="output2")
+
+
+class OverseaDailyPriceResponse(APIResponse):
+    class OverseaDailyPriceTicker(BaseModel):
+        symbol: str = Field(alias="rsym", description="종목코드")
+        prev_close: Decimal = Field(alias="nrec")
+
+    class OverseaDailyPriceRow(BaseModel):
+        base_date: str = Field(alias="xymd", description="기준일")
+        sign: Decimal = Field(description="대비기호", repr=False)
+        diff: Decimal = Field(description="종가변동", repr=False)
+        changes: Decimal = Field(alias="rate", description="전일비")
+        open: Decimal = Field(description="시가")
+        close: Decimal = Field(alias="clos", description="종가")
+        high: Decimal = Field(description="고가")
+        low: Decimal = Field(description="저가")
+        volume: Decimal = Field(alias="tvol", description="거래량")
+        trading_amount: Decimal = Field(alias="tamt", description="거래대금")
+        pbid: Decimal = Field(description="매수호가", repr=False)
+        vbid: Decimal = Field(description="매수호가잔량", repr=False)
+        pask: Decimal = Field(description="매도호가", repr=False)
+        vask: Decimal = Field(description="매도호가잔량", repr=False)
+
+    ticker: OverseaDailyPriceTicker = Field(alias="output1")
+    prices: List[OverseaDailyPriceRow] = Field(alias="output2")
