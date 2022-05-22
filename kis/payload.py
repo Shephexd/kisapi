@@ -1,12 +1,19 @@
 import requests as req
+from decimal import Decimal
 from urllib.parse import urljoin, urlencode
 from pydantic import BaseModel, Field, validator
 from kis.response import (
-    APIResponse, DomesticBalanceResponse, OverseaBalanceResponse
+    APIResponse,
+    DomesticDailyPriceResponse,
+    DomesticBalanceResponse,
+    OverseaBalanceResponse,
+    OverseaDailyPriceResponse,
 )
 
 
 class BasePayload(BaseModel):
+    tr_id = Field(default="", description="Transaction ID", exclude=True)
+
     @property
     def query_params(self):
         return urlencode(self.dict())
@@ -72,6 +79,26 @@ class IssueTokenPayload(BasePayload):
         return self.post(api_host=api_host, headers=headers)
 
 
+class DomesticDailyPricePayload(BasePayload):
+    tr_id: str = Field(default="FHKST01010400", description="Transaction ID", exclude=True)
+
+    FID_COND_MRKT_DIV_CODE: str = Field(default="J", description="주식, ETF, ETN", repr=False)
+    FID_INPUT_ISCD: str = Field(alias="symbol", description="종목코드")
+    FID_PERIOD_DIV_CODE: str = Field(default="D", alias="period_code", description="기간 분류")
+    FID_ORG_ADJ_PRC: str = Field(default="1", alias="adj_flag", description="수정주가반영")
+
+    @property
+    def url_path(self):
+        return "/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+
+    @property
+    def response_class(self) -> type:
+        return DomesticDailyPriceResponse
+
+    def send(self, api_host, headers) -> req.Response:
+        return self.get(api_host=api_host, headers=headers)
+
+
 class DomesticBalancePayload(BaseAccountPayload):
     tr_id = Field(default="TTTC8434R", description="Transaction ID", exclude=True)
 
@@ -94,6 +121,68 @@ class DomesticBalancePayload(BaseAccountPayload):
     @property
     def response_class(self) -> type:
         return DomesticBalanceResponse
+
+    def send(self, api_host, headers) -> req.Response:
+        return self.get(api_host=api_host, headers=headers)
+
+
+class OverseaOrderPayload(BaseAccountPayload):
+    tr_id = Field(default="", description="Transaction ID", exclude=True)
+    OVRS_EXCG_CD: str = Field(
+        alias="market_code", default="NASD", description="해외거래소코드"
+    )
+    PDNO: str = Field(alais="symbol", description="종목코드")
+    ORD_QTY: Decimal = Field(alias="qty", description="주문수량")
+    OVRS_ORD_UNPR: Decimal = Field(alias="price", description="해외주문단가")
+    CTAC_TLNO: str = Field(description="연락전화번호", default="", max_length=20)
+    MGCO_APTM_ODNO: str = Field(description="운용사지정주문번호", default="", max_length=12)
+    SLL_TYPE: str = Field(default="00", description="판매유형", max_length=2)
+    ORD_SVR_DVSN_CD: str = Field(default="0", description="주문서버구분코드", max_length=1)
+    ORD_DVSN: str = Field(default="00", alias="order_", description="주문구분(기본값:지정가)")
+
+
+class OverseaBidOrderPayload(OverseaOrderPayload):
+    tr_id = Field(default="JTTT1002U", description="Transaction ID", exclude=True)
+
+
+class OverseaAskOrderPayload(OverseaOrderPayload):
+    tr_id = Field(default="JTTT1006U", description="Transaction ID", exclude=True)
+
+
+class OverseaQuotePricePayload(BasePayload):
+    AUTH: str = Field(default="", repr=False)
+    EXCD: str = Field(default="NAS", alias="market_code", description="해외거래소코드")
+    SYMB: str = Field(alias="symbol", description="종목코드")
+
+    @property
+    def url_path(self):
+        return "/uapi/overseas-price/v1/quotations/price"
+
+    @property
+    def response_class(self) -> type:
+        return
+
+
+class OverseaDailyPricePayload(BasePayload):
+    tr_id = Field(
+        default="HHDFS76240000", description="Transaction ID", exclude=True, repr=False
+    )
+
+    AUTH: str = Field(default="", repr=False)
+    EXCD: str = Field(default="NAS", alias="market_code", description="해외거래소코드")
+    SYMB: str = Field(alias="symbol", description="종목코드")
+    GUBN: str = Field(default="0", description="일/주/월 구분", repr=False)
+    BYMD: str = Field(default="", alias="base_date")
+    MODP: str = Field(alias="adj_flag", default="1", description="수정주가반영여부")
+    KEYB: str = Field(alias="next_key", default="", repr=False)
+
+    @property
+    def url_path(self):
+        return "/uapi/overseas-price/v1/quotations/dailyprice"
+
+    @property
+    def response_class(self) -> type:
+        return OverseaDailyPriceResponse
 
     def send(self, api_host, headers) -> req.Response:
         return self.get(api_host=api_host, headers=headers)
