@@ -85,6 +85,29 @@ class DomesticBalanceResponse(APIResponse):
         return super().get_first(v)
 
 
+class DomesticDailyPriceResponse(APIResponse):
+    class DailyPriceDetail(BaseModel):
+        base_date: str = Field(alias="stck_bsop_date", description="영업일")
+        open: Decimal = Field(alias="stck_oprc", description="시가")
+        high: Decimal = Field(alias="stck_hgpr", description="최고가")
+        low: Decimal = Field(alias="stck_lwpr", description="최저가")
+        close: Decimal = Field(alias="stck_clpr", description="종가")
+        vol: int = Field(alias="acml_vol", description="누적 거래량")
+        vol_rate: Decimal = Field(alias="prdy_vrss_vol_rate", description="전일 대비 거래량 비율")
+        change: Decimal = Field(alias="prdy_vrss", description="전일 대비")
+        """
+        TODO fields
+        -PRDY_VRSS_SIGN	전일 대비 부호	String	Y	1
+        -PRDY_CTRT	전일 대비율	String	Y	10
+        -HTS_FRGN_EHRT	HTS 외국인 소진율	String	Y	10
+        -FRGN_NTBY_QTY	외국인 순매수 수량	String	Y	12
+        -FLNG_CLS_CODE	락 구분 코드	String	Y	2	01 : 권리락, 02 : 배당락, 03 : 분배락, 04 : 권배락
+        05 : 중간(분기)배당락, 06 : 권리중간배당락, 07 : 권리분기배당락
+        -ACML_PRTT_RATE	누적 분할 비율	String	Y	12
+        """
+    prices: List[DailyPriceDetail] = Field(alias="output")
+
+
 class OverseaBalanceResponse(APIResponse):
     class HoldingDetail(BaseModel):
         symbol: str = Field(alias="ovrs_pdno", description="상품번호")
