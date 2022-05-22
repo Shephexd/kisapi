@@ -23,10 +23,15 @@ class BasePayload(BaseModel):
         raise NotImplementedError("need to be implemented")
 
     def get(self, api_host, headers):
-        return req.get(url=self.get_url(api_host=api_host, query_params=self.query_params), headers=headers)
+        return req.get(
+            url=self.get_url(api_host=api_host, query_params=self.query_params),
+            headers=headers,
+        )
 
     def post(self, api_host, headers):
-        return req.post(url=self.get_url(api_host=api_host), headers=headers, json=self.dict())
+        return req.post(
+            url=self.get_url(api_host=api_host), headers=headers, json=self.dict()
+        )
 
     def get_url(self, api_host, query_params: str = ""):
         _url = urljoin(api_host, self.url_path)
@@ -75,7 +80,9 @@ class DomesticBalancePayload(BaseAccountPayload):
     INQR_DVSN: str = Field(default="01", description="조회구분", repr=False)
     UNPR_DVSN: str = Field(default="01", description="단가구분", repr=False)
     FUND_STTL_ICLD_YN: str = Field(default="N", description="펀드결제분포함", repr=False)
-    FNCG_AMT_AUTO_RDPT_YN: str = Field(default="N", description="융자금액자동상환여부", repr=False)
+    FNCG_AMT_AUTO_RDPT_YN: str = Field(
+        default="N", description="융자금액자동상환여부", repr=False
+    )
     PRCS_DVSN: str = Field(default="00", description="전일매매포함")
     CTX_AREA_FK100: str = Field(default="", description="연속조회조건검색", repr=False)
     CTX_AREA_NK100: str = Field(default="", description="연속조회키", repr=False)
@@ -95,7 +102,9 @@ class DomesticBalancePayload(BaseAccountPayload):
 class OverseaBalancePayload(BaseAccountPayload):
     tr_id = Field(default="JTTT3012R", description="Transaction ID", exclude=True)
 
-    OVRS_EXCG_CD: str = Field(alias="market_code", default="NASD", description="해외거래소코드")
+    OVRS_EXCG_CD: str = Field(
+        alias="market_code", default="NASD", description="해외거래소코드"
+    )
     TR_CRCY_CD: str = Field(alias="currency_code", default="USD", description="거래통화코드")
     CTX_AREA_FK200: str = Field(default="", description="연속조회조건검색", repr=False)
     CTX_AREA_NK200: str = Field(default="", description="연속조회키", repr=False)

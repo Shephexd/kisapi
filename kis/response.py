@@ -4,7 +4,9 @@ from pydantic import BaseModel, Field, validator
 
 
 class APIResponse(BaseModel):
-    return_code: str = Field(alias="rt_cd", description="0: 성공, 0 이외의 값: 실패", repr=False)
+    return_code: str = Field(
+        alias="rt_cd", description="0: 성공, 0 이외의 값: 실패", repr=False
+    )
     message: str = Field(alias="msg1", description="응답 메시지")
     message_code: str = Field(alias="msg_cd", description="응답 코드", repr=False)
 
@@ -39,24 +41,34 @@ class DomesticBalanceResponse(APIResponse):
     class BalanceDetail(BaseModel):
         deposit: int = Field(alias="dnca_tot_amt", description="예수금총금액")
         next_day_execution_amt: int = Field(alias="nxdy_excc_amt", description="익일정산금액")
-        estimated_execution_amt: int = Field(alias="prvs_rcdl_excc_amt", description="가수도정산금액")
+        estimated_execution_amt: int = Field(
+            alias="prvs_rcdl_excc_amt", description="가수도정산금액"
+        )
         cma_eval_amt: int = Field(alias="cma_evlu_amt", description="CMA평가금액")
         prev_bid_amt: int = Field(alias="bfdy_buy_amt", description="전일매수금액")
         bid_amt: int = Field(alias="thdt_buy_amt", description="금일매수금액")
-        next_auto_repay_amt: int = Field(alias="nxdy_auto_rdpt_amt", description="익일자동상환금액")
+        next_auto_repay_amt: int = Field(
+            alias="nxdy_auto_rdpt_amt", description="익일자동상환금액"
+        )
         prev_ask_amt: int = Field(alias="bfdy_sll_amt", description="전일매도금액")
         ask_amt: int = Field(alias="thdt_sll_amt", description="금일매도금액")
-        d2_auto_repay_amt: int = Field(alias="d2_auto_rdpt_amt", description="D+2자동상환금액")
+        d2_auto_repay_amt: int = Field(
+            alias="d2_auto_rdpt_amt", description="D+2자동상환금액"
+        )
         prev_charge: int = Field(alias="bfdy_tlex_amt", description="전일제비용금액")
         charge: int = Field(alias="thdt_tlex_amt", description="금일제비용금액")
         total_loan: int = Field(alias="tot_loan_amt", description="총대출금액")
         eval_amt: int = Field(alias="scts_evlu_amt", description="유가평가금액")
         total_amt: int = Field(alias="tot_evlu_amt", description="총평가금액")
         net_asset: int = Field(alias="nass_amt", description="순자산금")
-        
-        prev_eval_amt: int = Field(alias="bfdy_tot_asst_evlu_amt", description="전일총자산평가금액")
+
+        prev_eval_amt: int = Field(
+            alias="bfdy_tot_asst_evlu_amt", description="전일총자산평가금액"
+        )
         asset_change: int = Field(alias="asst_icdc_amt", description="자상증감액")
-        asset_change_return: Decimal = Field(alias="asst_icdc_erng_rt", description="자산증감수익률")
+        asset_change_return: Decimal = Field(
+            alias="asst_icdc_erng_rt", description="자산증감수익률"
+        )
 
     search_key: str = Field(alias="ctx_area_fk100", description="연속조회검색조건", repr=False)
     next_key: str = Field(alias="ctx_area_nk100", description="연속조회키", repr=False)
@@ -79,24 +91,42 @@ class OverseaBalanceResponse(APIResponse):
         name: str = Field(alias="ovrs_item_name", description="상품명", repr=False)
         profit_loss: Decimal = Field(alias="frcr_evlu_pfls_amt", description="외화평가손익금액")
         profit_loss_ratio: Decimal = Field(alias="evlu_pfls_rt", description="평가손익률")
-        purchase_avg_price: Decimal = Field(alias="pchs_avg_pric", description="해당 종목의 매수 평균 단가")
+        purchase_avg_price: Decimal = Field(
+            alias="pchs_avg_pric", description="해당 종목의 매수 평균 단가"
+        )
         holding_qty: Decimal = Field(alias="ovrs_cblc_qty", description="잔고수량")
-        ord_possible_qty: Decimal = Field(alias="ord_psbl_qty", description="매도 가능한 주문 수량")
-        purchase_amt: Decimal = Field(alias="frcr_pchs_amt1", description="해당 종목의 외화 기준 매입금액")
+        ord_possible_qty: Decimal = Field(
+            alias="ord_psbl_qty", description="매도 가능한 주문 수량"
+        )
+        purchase_amt: Decimal = Field(
+            alias="frcr_pchs_amt1", description="해당 종목의 외화 기준 매입금액"
+        )
         eval_amt: Decimal = Field(alias="ovrs_stck_evlu_amt", description="평가금액")
         price: Decimal = Field(alias="now_pric2", description="현재가격")
         currency_code: str = Field(alias="tr_crcy_cd", description="거래통화코드")
 
     class BalanceDetail(BaseModel):
-        foreign_purchase_amt: Decimal = Field(alias="frcr_pchs_amt1", description="외화매입금액1")
-        realized_profit_loss: Decimal = Field(alias="ovrs_rlzt_pfls_amt", description="해외실현손익금액")
+        foreign_purchase_amt: Decimal = Field(
+            alias="frcr_pchs_amt1", description="외화매입금액1"
+        )
+        realized_profit_loss: Decimal = Field(
+            alias="ovrs_rlzt_pfls_amt", description="해외실현손익금액"
+        )
         total_profit_loss: Decimal = Field(alias="ovrs_tot_pfls", description="해외총손익")
         realized_return: Decimal = Field(alias="rlzt_erng_rt", description="실현수익률")
-        total_eval_profit_loss_amt: Decimal = Field(alias="tot_evlu_pfls_amt", description="총푱가손익금액")
+        total_eval_profit_loss_amt: Decimal = Field(
+            alias="tot_evlu_pfls_amt", description="총푱가손익금액"
+        )
         total_return: Decimal = Field(alias="tot_pftrt", description="총수익률")
-        exchange_amt: Decimal = Field(alias="frcr_buy_amt_smtl1", description="외화매수금액합계1")
-        realized_profit_loss2: Decimal = Field(alias="ovrs_rlzt_pfls_amt2", description="해외실현손익금액2")
-        exchange_amt2: Decimal = Field(alias="frcr_buy_amt_smtl2", description="외화매수금액합계2")
+        exchange_amt: Decimal = Field(
+            alias="frcr_buy_amt_smtl1", description="외화매수금액합계1"
+        )
+        realized_profit_loss2: Decimal = Field(
+            alias="ovrs_rlzt_pfls_amt2", description="해외실현손익금액2"
+        )
+        exchange_amt2: Decimal = Field(
+            alias="frcr_buy_amt_smtl2", description="외화매수금액합계2"
+        )
 
     search_key: str = Field(alias="ctx_area_fk200", description="연속조회검색조건", repr=False)
     next_key: str = Field(alias="ctx_area_nk200", description="연속조회키", repr=False)
