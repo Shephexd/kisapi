@@ -90,6 +90,6 @@ class KISOverseaConnector(KISConnector):
         payload = OverseaBalancePayload(account_number=account_number)
         return self.get_response(payload=payload, access_token=access_token)
 
-    def get_daily_price(self, access_token, symbol):
-        payload = OverseaDailyPricePayload(symbol=symbol)
+    def get_daily_price(self, access_token, symbol, market_code):
+        payload = OverseaDailyPricePayload(symbol=symbol, market_code=market_code)
         return self.get_response(payload=payload, access_token=access_token)
