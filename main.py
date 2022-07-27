@@ -1,25 +1,48 @@
 import logging
+from requests import RequestException
+from decimal import Decimal
 from typing import Union
 from collections import OrderedDict
 from pydantic import ValidationError
 from fastapi import FastAPI, Header, HTTPException
-from kis.connector import KISOverseaConnector
+from kis.connector import KISConnector
 from kis.models import KISUser
-from kis.configs import apihost, appkey, appsecret
-from kis.payload import MarketCode
-from kis.response import (
+from kis.configs import APIHOST, APPKEY, APPSECRET
+from kis.connector.payload.oversea import (
+    BasePayload,
+    OverseaDailyPricePayload,
+    OverseaQuotePricePayload,
+    OverseaBidOrderPayload,
+    OverseaAskOrderPayload,
+    OverseaUpdateOrderPayload,
+    OverseaCancelOrderPayload,
+    OverseaBalancePayload,
+    OverseaUnexecutedListPayload,
+)
+from kis.connector.payload.enum import OverseaPriceMarketCode, OverseaOrderMarketCode
+from kis.connector.payload.response import (
     TokenResponse,
     OverseaBalanceResponse,
     OverseaDailyPriceResponse,
+    OverseaQuotePriceResponse,
+    OverseaBidOrderResponse,
+    OverseaAskOrderResponse,
+    OverseaChangeOrderResponse,
+    OverseaUnexecutedListResponse,
 )
 
 app = FastAPI()
-default_user = KISUser(apihost=apihost, appkey=appkey, appsecret=appsecret)
+default_user = KISUser(apihost=APIHOST, appkey=APPKEY, appsecret=APPSECRET)
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
 
 
 @app.post("/api/v1/token", response_model=TokenResponse)
 def issue_token():
-    connector = KISOverseaConnector(
+    connector = KISConnector(
         apihost=default_user.apihost,
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
@@ -27,65 +50,94 @@ def issue_token():
     return connector.issue_token()
 
 
-@app.get("/api/v1/oversea/price/{symbol}", response_model=OverseaDailyPriceResponse)
-def get_price(
+@app.get(
+    "/api/v1/oversea/price/daily/{symbol}",
+    tags=["price"],
+    response_model=OverseaDailyPriceResponse,
+)
+def get_daily_price(
     symbol,
-    market_code: MarketCode = "NYS",
+    market_code: OverseaPriceMarketCode = "NYS",
     access_token: Union[str, None] = Header(default=None),
 ):
-    connector = KISOverseaConnector(
+    connector = KISConnector(
         apihost=default_user.apihost,
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
     )
+    payload: BasePayload = OverseaDailyPricePayload(
+        market_code=market_code, symbol=symbol
+    )
     try:
-        resp = connector.get_daily_price(
-            access_token=access_token, symbol=symbol, market_code=market_code
-        )
+        resp = connector.send(access_token=access_token, payload=payload)
         return resp.dict()
     except ValidationError as e:
         logging.debug(str(e))
-        raise HTTPException(status_code=400, detail="pasring fail. check payload")
+        raise HTTPException(status_code=400, detail="parsing fail. check payload")
 
 
 @app.get(
-    "/api/v1/oversea/accounts/{account_nuber}/balance",
-    response_model=OverseaBalanceResponse,
-    response_model_exclude={"search_key", "next_key"},
+    "/api/v1/oversea/price/quote/{symbol}",
+    tags=["price"],
+    response_model=OverseaQuotePriceResponse,
 )
-def get_balance(
-    account_number: str, access_token: Union[str, None] = Header(default=None)
-) -> OverseaBalanceResponse:
-    connector = KISOverseaConnector(
+def get_quote(
+    symbol,
+    market_code: OverseaPriceMarketCode = "NYS",
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
         apihost=default_user.apihost,
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
     )
-    resp = connector.get_balance(
-        access_token=access_token, account_number=account_number
+    payload: BasePayload = OverseaQuotePricePayload(
+        market_code=market_code, symbol=symbol
     )
+    try:
+        resp = connector.send(access_token=access_token, payload=payload)
+        return resp.dict()
+    except ValidationError as e:
+        logging.debug(str(e))
+        raise HTTPException(status_code=400, detail="parsing fail. check payload")
+
+
+@app.get(
+    "/api/v1/oversea/accounts/balance",
+    response_model=OverseaBalanceResponse,
+    response_model_exclude={"search_key", "next_key"},
+    tags=["account"],
+)
+def get_balance(
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+) -> OverseaBalanceResponse:
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    payload = OverseaBalancePayload(account_number=account_number)
+    resp = connector.send(payload=payload, access_token=access_token)
     return resp
 
 
-@app.get(
-    "/api/v1/oversea/accounts/{account_number}/weights",
-)
+@app.get("/api/v1/oversea/accounts/weights", tags=["account"])
 def get_weights(
-    account_number: str,
+    account_number: str = Header(default=None),
     access_token: Union[str, None] = Header(default=None),
     descend: bool = True,
 ):
-    connector = KISOverseaConnector(
+    connector = KISConnector(
         apihost=default_user.apihost,
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
     )
-    resp = connector.get_balance(
-        access_token=access_token, account_number=account_number
-    ).dict(by_alias=True)
+    payload = OverseaBalancePayload(account_number=account_number)
+    resp = connector.send(payload=payload, access_token=access_token).dict()
     _weights = {
-        a['symbol']: round(a['eval_amt'] / resp['balance']['total_eval_amt'], 4)
-        for a in resp['holdings']
+        a["symbol"]: round(a["eval_amt"] / resp["balance"]["total_eval_amt"], 4)
+        for a in resp["holdings"]
     }
     return OrderedDict(
         sorted(
@@ -93,3 +145,154 @@ def get_weights(
             key=lambda item: -item[1] if descend else item[1],
         )
     )
+
+
+@app.post(
+    "/api/v1/oversea/order/bid", response_model=OverseaBidOrderResponse, tags=["order"]
+)
+def request_bid(
+    market_code: OverseaOrderMarketCode,
+    symbol: str,
+    qty: Decimal,
+    price: Decimal,
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    payload = OverseaBidOrderPayload(
+        account_number=account_number,
+        symbol=symbol,
+        market_code=market_code,
+        qty=qty,
+        price=price,
+    )
+    resp = connector.send(payload=payload, access_token=access_token).dict()
+    return resp
+
+
+@app.post(
+    "/api/v1/oversea/order/ask", response_model=OverseaAskOrderResponse, tags=["order"]
+)
+def request_ask(
+    market_code: OverseaOrderMarketCode,
+    symbol: str,
+    qty: float,
+    price: float,
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    try:
+        payload = OverseaAskOrderPayload(
+            account_number=account_number,
+            symbol=symbol,
+            market_code=market_code,
+            qty=qty,
+            price=price,
+        )
+        resp = connector.send(payload=payload, access_token=access_token).dict()
+        return resp
+    except RequestException as e:
+        return e.response
+
+
+@app.put(
+    "/api/v1/oversea/order/{order_no}",
+    response_model=OverseaChangeOrderResponse,
+    tags=["order"],
+)
+async def update_order(
+    order_no: int,
+    market_code: OverseaOrderMarketCode,
+    symbol: str,
+    qty: float,
+    price: float,
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    try:
+        payload = OverseaUpdateOrderPayload(
+            account_number=account_number,
+            order_no=order_no,
+            symbol=symbol,
+            market_code=market_code,
+            qty=qty,
+            price=price,
+        )
+        print(payload.dict(by_alias=True))
+        resp = connector.send(payload=payload, access_token=access_token).dict()
+        return resp
+    except RequestException as e:
+        return e.response
+
+
+@app.delete(
+    "/api/v1/oversea/order/{order_no}",
+    response_model=OverseaChangeOrderResponse,
+    tags=["order"],
+)
+def delete_order(
+    order_no: int,
+    account_number: str,
+    market_code: OverseaOrderMarketCode,
+    symbol: str,
+    qty: int,
+    price: float = 1,
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    try:
+        payload = OverseaCancelOrderPayload(
+            account_number=account_number,
+            order_no=order_no,
+            symbol=symbol,
+            market_code=market_code,
+            qty=qty,
+            price=price,
+        )
+        resp = connector.send(payload=payload, access_token=access_token).dict()
+        return resp
+    except RequestException as e:
+        return e.response
+
+
+@app.get(
+    "/api/v1/oversea/order/unexecuted",
+    response_model=OverseaUnexecutedListResponse,
+    tags=["order"],
+)
+def get_unexecuted(
+    market_code: OverseaOrderMarketCode,
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    try:
+        payload = OverseaUnexecutedListPayload(
+            account_number=account_number, market_code=market_code
+        )
+        resp = connector.send(payload=payload, access_token=access_token).dict()
+        return resp
+    except RequestException as e:
+        return e.response
