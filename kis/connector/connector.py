@@ -44,22 +44,21 @@ class KISConnector:
             "custtype": "P",
         }
 
-    def send(self, payload: BasePayload, access_token):
+    def send(self, payload: BasePayload, access_token, **additional_headers):
         try:
             if payload.action_type == "GET":
-                parsed_resp = self.get_response(
-                    payload=payload, access_token=access_token
+                resp_header, parsed_resp = self.get_response(
+                    payload=payload, access_token=access_token, **additional_headers
                 )
             elif payload.action_type == "POST":
-                parsed_resp = self.post_response(
-                    payload=payload, access_token=access_token
+                resp_header, parsed_resp = self.post_response(
+                    payload=payload, access_token=access_token, **additional_headers
                 )
             else:
                 raise KeyError({"detail": "Unsupported action type for payload"})
         except requests.exceptions.HTTPError as e:
             raise RuntimeError(str(e))
-        print(parsed_resp)
-        return payload.response_class(**parsed_resp)
+        return payload.response_class(header=resp_header, **parsed_resp)
 
     def get_headers(self, tr_id=None, access_token=None):
         _headers = {
@@ -77,30 +76,32 @@ class KISConnector:
             print(resp)
             raise requests.exceptions.InvalidJSONError(response=resp)
 
-    def get_response(self, payload: BasePayload, access_token, **kwargs) -> dict:
+    def get_response(self, payload: BasePayload, access_token, **additional_headers):
         target_url = payload.get_url(
             api_host=self.apihost, query_params=payload.query_params
         )
+        request_headers = self.get_headers(tr_id=payload.tr_id, access_token=access_token)
+        request_headers.update(additional_headers)
         resp = req.request(
             method="get",
             url=target_url,
-            headers=self.get_headers(tr_id=payload.tr_id, access_token=access_token),
+            headers=request_headers
         )
         parsed_resp = resp.json()
         self.check_response(resp=parsed_resp)
-        return parsed_resp
+        return resp.headers, parsed_resp
 
-    def post_response(self, payload: BasePayload, access_token: str, **kwargs):
+    def post_response(self, payload: BasePayload, access_token: str, **additional_headers):
         target_url = payload.get_url(api_host=self.apihost)
-        headers = self.get_headers(tr_id=payload.tr_id, access_token=access_token)
+        request_headers = self.get_headers(tr_id=payload.tr_id, access_token=access_token)
         body, hashkey = self.hash_data(data=payload.dict(by_alias=True))
-        headers["hashkey"] = hashkey
+        request_headers["hashkey"] = hashkey
+        request_headers.update(additional_headers)
 
-        print(body)
-        resp = req.request(method="post", url=target_url, headers=headers, json=body)
+        resp = req.request(method="post", url=target_url, headers=request_headers, json=body)
         parsed_resp = resp.json()
         self.check_response(resp=parsed_resp)
-        return parsed_resp
+        return resp.headers, parsed_resp
 
     def issue_token(self):
         payload: BasePayload = IssueTokenPayload(
