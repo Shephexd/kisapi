@@ -19,7 +19,7 @@ from kis.connector.payload.oversea import (
     OverseaBalancePayload,
     OverseaUnexecutedListPayload,
     OverseaOrderHistoryPayload,
-    OverseaOrderHistoryNightPayload
+    OverseaOrderHistoryNightPayload,
 )
 from kis.connector.payload.enum import OverseaPriceMarketCode, OverseaOrderMarketCode
 from kis.connector.payload.response import (
@@ -31,7 +31,7 @@ from kis.connector.payload.response import (
     OverseaAskOrderResponse,
     OverseaChangeOrderResponse,
     OverseaUnexecutedListResponse,
-    OverseaOrderHistoryResponse
+    OverseaOrderHistoryResponse,
 )
 
 app = FastAPI()
@@ -320,17 +320,23 @@ def get_order_history(
     )
     payload: BasePayload = OverseaOrderHistoryNightPayload(
         account_number=account_number,
-        start_date=start_date, end_date=end_date, market_code=market_code
+        start_date=start_date,
+        end_date=end_date,
+        market_code=market_code,
     )
     try:
-        resp: OverseaOrderHistoryResponse = connector.send(access_token=access_token, payload=payload)
+        resp: OverseaOrderHistoryResponse = connector.send(
+            access_token=access_token, payload=payload
+        )
         output_results = resp.output
 
         while resp.has_next:
             payload.CTX_AREA_NK200 = resp.ctx_area_nk200
             payload.CTX_AREA_FK200 = resp.ctx_area_fk200
 
-            resp: OverseaOrderHistoryResponse = connector.send(access_token=access_token, payload=payload, tr_cont='N')
+            resp: OverseaOrderHistoryResponse = connector.send(
+                access_token=access_token, payload=payload, tr_cont="N"
+            )
             output_results += resp.output
         resp.output = output_results
         return resp

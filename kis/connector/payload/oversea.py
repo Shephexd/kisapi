@@ -17,7 +17,7 @@ from .response import (
     OverseaDailyPriceResponse,
     OverseaQuotePriceResponse,
     OverseaUnexecutedListResponse,
-    OverseaOrderHistoryResponse
+    OverseaOrderHistoryResponse,
 )
 from pydantic import Field
 

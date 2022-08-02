@@ -80,25 +80,29 @@ class KISConnector:
         target_url = payload.get_url(
             api_host=self.apihost, query_params=payload.query_params
         )
-        request_headers = self.get_headers(tr_id=payload.tr_id, access_token=access_token)
-        request_headers.update(additional_headers)
-        resp = req.request(
-            method="get",
-            url=target_url,
-            headers=request_headers
+        request_headers = self.get_headers(
+            tr_id=payload.tr_id, access_token=access_token
         )
+        request_headers.update(additional_headers)
+        resp = req.request(method="get", url=target_url, headers=request_headers)
         parsed_resp = resp.json()
         self.check_response(resp=parsed_resp)
         return resp.headers, parsed_resp
 
-    def post_response(self, payload: BasePayload, access_token: str, **additional_headers):
+    def post_response(
+        self, payload: BasePayload, access_token: str, **additional_headers
+    ):
         target_url = payload.get_url(api_host=self.apihost)
-        request_headers = self.get_headers(tr_id=payload.tr_id, access_token=access_token)
+        request_headers = self.get_headers(
+            tr_id=payload.tr_id, access_token=access_token
+        )
         body, hashkey = self.hash_data(data=payload.dict(by_alias=True))
         request_headers["hashkey"] = hashkey
         request_headers.update(additional_headers)
 
-        resp = req.request(method="post", url=target_url, headers=request_headers, json=body)
+        resp = req.request(
+            method="post", url=target_url, headers=request_headers, json=body
+        )
         parsed_resp = resp.json()
         self.check_response(resp=parsed_resp)
         return resp.headers, parsed_resp
