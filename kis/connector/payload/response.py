@@ -20,6 +20,7 @@ class APIResponse(Response):
     )
     message: str = Field(alias="msg1", description="응답 메시지")
     message_code: str = Field(alias="msg_cd", description="응답 코드", repr=False)
+    header: dict = Field(description="response header", default={}, exclude=True)
 
     @classmethod
     def get_first(cls, v: list or dict):
@@ -30,6 +31,9 @@ class APIResponse(Response):
     @validator("message")
     def strip_str(cls, v: str):
         return v.strip()
+
+    def dict(self, by_alias=True, **kwargs):
+        return super().dict(by_alias=True, **kwargs)
 
 
 class DomesticBalanceResponse(APIResponse):
@@ -309,3 +313,49 @@ class OverseaUnexecutedListResponse(APIResponse):
         usa_amk_exts_rqst_yn: str
 
     detail: List[OverseaUnexecutedDetail] = Field(alias="output")
+
+
+class OverseaOrderHistoryResponse(APIResponse):
+    class OverseaOrderHistoryRowResponse(Response):
+        ord_dt: str = Field(alias="order_date", description="주문일자")
+        ord_gno_brno: str = Field(alias="order_branch_no", description="주문채번지점번호(계좌 개설 시 관리점으로 선택한 영업점의 고유번호)")
+        odno: str = Field(alias="order_no", description="주문번호(접수한 주문의 일련번호)")
+        orgn_odno: str = Field(alias="origin_order_no", description="원주문번호(정정 또는 취소 대상 주문의 일련번호)")
+        sll_buy_dvsn_cd: str = Field(alias="trade_type", description="매도매수구분코드 (01: 매도, 02: 매수)")
+        sll_buy_dvsn_cd_name: str = Field(alias="trade_type_name", description="매도매수구분코드명")
+        rvse_cncl_dvsn: str = Field(alias="cancel_code", description="정정취소구분(01: 정정 02: 취소)")
+        rvse_cncl_dvsn_name: str = Field(alias="cancel_code_name", description="정정취소구분명")
+        pdno: str = Field(alias="product_no", description="상품번호")
+        prdt_name: str = Field(alias="symbol", description="상품명")
+        ft_ord_qty: str = Field(alias="ord_qty", description="주문수량")
+        ft_ord_unpr3: str = Field(alias="ord_price", description="주문단가(주문가격)")
+        ft_ccld_qty: str = Field(alias="exec_qty", description="체결수량")
+        ft_ccld_unpr3: str = Field(alias="exec_price", description="체결단가3")
+        ft_ccld_amt3: str = Field(alias="exec_amt", description="체결금액3")
+        nccs_qty: str = Field(alias="unexec_qty", description="미체결수량")
+        prcs_stat_name: str = Field(alias="status_name", description="처리상태명")
+        rjct_rson: str = Field(alias="reject_reason", description="거부사유(정상 처리되지 못하고 거부된 주문의 사유)")
+        ord_tmd: str = Field(alias="order_time", description="주문시각(주문 접수 시간)")
+        tr_mket_name: str = Field(alias="market_name", description="거래시장명")
+        tr_natn: str = Field(alias="nation_code", description="거래국가")
+        tr_natn_name: str = Field(alias="nation_name", description="거래국가명")
+        ovrs_excg_cd: str = Field(alias="market_code", description="해외거래소코드(NASD: 나스닥, NYSE : 뉴욕, AMEX : 아멕스, SEHK : 홍콩, SHAA : 중국상해, SZAA : 중국심천, TKSE : 일본")
+        tr_crcy_cd: str = Field(alias="currency_code", description="거래통화코드")
+        dmst_ord_dt: str = Field(alias="order_date_kst", description="국내주문일자")
+        thco_ord_tmd: str = Field(alias="order_time_kst", description="당사주문시각")
+        loan_type_cd: str = Field(alias="loan_code", description="대출유형코드")
+        mdia_dvsn_name: str = Field(alias="channel", description="매체구분명")
+        loan_dt: str = Field(alias="loan_date", description="대출일자")
+        rjct_rson_name: str = Field(alias="reject_reason_name", description="거부사유명")
+
+    ctx_area_fk200: str = Field(description="연속조회검색조건200", alias="search_key")
+    ctx_area_nk200: str = Field(description="연속조회키200", alias="next_key")
+    output: List[OverseaOrderHistoryRowResponse] = Field(alias="history")
+
+    @property
+    def has_next(self):
+        return self.header['tr_cont'] == "M"
+
+    @property
+    def is_last(self):
+        return self.header['tr_cont'] == "D"

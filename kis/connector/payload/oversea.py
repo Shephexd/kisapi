@@ -9,7 +9,7 @@ from .enum import (
     OverseaPricePeriod,
 )
 from .response import (
-    Response,
+    APIResponse,
     OverseaBidOrderResponse,
     OverseaAskOrderResponse,
     OverseaChangeOrderResponse,
@@ -17,6 +17,7 @@ from .response import (
     OverseaDailyPriceResponse,
     OverseaQuotePriceResponse,
     OverseaUnexecutedListResponse,
+    OverseaOrderHistoryResponse
 )
 from pydantic import Field
 
@@ -142,7 +143,7 @@ class OverseaBidOrderPayload(OverseaOrderPayload):
     tr_id = Field(default="JTTT1002U", description="Transaction ID", exclude=True)
 
     @property
-    def response_class(self) -> Type[Response]:
+    def response_class(self) -> Type[APIResponse]:
         return OverseaBidOrderResponse
 
 
@@ -183,3 +184,33 @@ class OverseaCancelOrderPayload(OverseaOrderPayload):
     @property
     def response_class(self) -> type:
         return OverseaChangeOrderResponse
+
+
+class OverseaOrderHistoryPayload(BaseAccountPayload):
+    tr_id = Field(default="TTTS3035R", description="")
+    start_date: str = Field(alias="ORD_STRT_DT", description="시작일자")
+    end_date: str = Field(alias="ORD_END_DT", description="종료일자")
+    order_type: str = Field(alias="SLL_BUY_DVSN", default="00", description="매도매수구분")
+    execution_type: str = Field(alias="CCLD_NCCS_DVSN", default="00", description="")
+    market_code: str = Field(alias="OVRS_EXCG_CD")
+    PDNO = ""
+    SORT_SQN = "DS"
+    ORD_DT = ""
+    ORD_GNO_BRNO = ""
+    ODNO = ""
+    CTX_AREA_NK200 = ""
+    CTX_AREA_NK100 = ""
+    CTX_AREA_FK200 = ""
+    CTX_AREA_FK100 = ""
+
+    @property
+    def url_path(self):
+        return "/uapi/overseas-stock/v1/trading/inquire-ccnl"
+
+    @property
+    def response_class(self) -> Type[APIResponse]:
+        return OverseaOrderHistoryResponse
+
+
+class OverseaOrderHistoryNightPayload(OverseaOrderHistoryPayload):
+    tr_id = Field(default="JTTT3001R", description="TR ID")
