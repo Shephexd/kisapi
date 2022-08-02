@@ -18,6 +18,8 @@ from kis.connector.payload.oversea import (
     OverseaCancelOrderPayload,
     OverseaBalancePayload,
     OverseaUnexecutedListPayload,
+    OverseaOrderHistoryPayload,
+    OverseaOrderHistoryNightPayload
 )
 from kis.connector.payload.enum import OverseaPriceMarketCode, OverseaOrderMarketCode
 from kis.connector.payload.response import (
@@ -29,6 +31,7 @@ from kis.connector.payload.response import (
     OverseaAskOrderResponse,
     OverseaChangeOrderResponse,
     OverseaUnexecutedListResponse,
+    OverseaOrderHistoryResponse
 )
 
 app = FastAPI()
@@ -296,3 +299,41 @@ def get_unexecuted(
         return resp
     except RequestException as e:
         return e.response
+
+
+@app.get(
+    "/api/v1/oversea/order/history",
+    tags=["order"],
+    response_model=OverseaOrderHistoryResponse,
+)
+def get_order_history(
+    start_date: str,
+    end_date: str,
+    market_code: OverseaOrderMarketCode = "NASD",
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+):
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    payload: BasePayload = OverseaOrderHistoryNightPayload(
+        account_number=account_number,
+        start_date=start_date, end_date=end_date, market_code=market_code
+    )
+    try:
+        resp: OverseaOrderHistoryResponse = connector.send(access_token=access_token, payload=payload)
+        output_results = resp.output
+
+        while resp.has_next:
+            payload.CTX_AREA_NK200 = resp.ctx_area_nk200
+            payload.CTX_AREA_FK200 = resp.ctx_area_fk200
+
+            resp: OverseaOrderHistoryResponse = connector.send(access_token=access_token, payload=payload, tr_cont='N')
+            output_results += resp.output
+        resp.output = output_results
+        return resp
+    except ValidationError as e:
+        logging.debug(str(e))
+        raise HTTPException(status_code=400, detail="parsing fail. check payload")
