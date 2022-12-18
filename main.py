@@ -1,3 +1,4 @@
+import datetime
 import logging
 from requests import RequestException
 from decimal import Decimal
@@ -60,6 +61,7 @@ def issue_token():
 )
 def get_daily_price(
     symbol,
+    base_date: datetime.date = "",
     market_code: OverseaPriceMarketCode = "NYS",
     access_token: Union[str, None] = Header(default=None),
 ):
@@ -68,8 +70,11 @@ def get_daily_price(
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
     )
+
+    if isinstance(base_date, datetime.date):
+        base_date = base_date.strftime("%Y%m%d")
     payload: BasePayload = OverseaDailyPricePayload(
-        market_code=market_code, symbol=symbol
+        market_code=market_code, symbol=symbol, base_date=base_date
     )
     try:
         resp = connector.send(access_token=access_token, payload=payload)
