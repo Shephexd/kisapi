@@ -61,10 +61,20 @@ def issue_token():
 )
 def get_daily_price(
     symbol,
+    start_date: datetime.date = "",
     base_date: datetime.date = "",
     market_code: OverseaPriceMarketCode = "NYS",
     access_token: Union[str, None] = Header(default=None),
 ):
+    def is_date_filled(start_dt, last_dt):
+        if not start_dt:
+            return True
+
+        last_dt = datetime.datetime.strptime(last_dt, "%Y%m%d").date()
+        if start_dt < last_dt:
+            return False
+        return True
+
     connector = KISConnector(
         apihost=default_user.apihost,
         appkey=default_user.appkey,
@@ -78,6 +88,18 @@ def get_daily_price(
     )
     try:
         resp = connector.send(access_token=access_token, payload=payload)
+        last_date = resp.prices[-1].base_date
+        while not is_date_filled(start_dt=start_date, last_dt=last_date):
+            next_payload: BasePayload = OverseaDailyPricePayload(
+                market_code=market_code, symbol=symbol, base_date=last_date
+            )
+            next_resp = connector.send(access_token=access_token, payload=next_payload)
+            last_date = next_resp.prices[-1].base_date
+            resp.prices += [
+                p
+                for p in next_resp.prices[1:]
+                if p.base_date >= start_date.strftime("%Y%m%d")
+            ]
         return resp.dict()
     except ValidationError as e:
         logging.debug(str(e))
