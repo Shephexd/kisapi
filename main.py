@@ -69,7 +69,8 @@ def get_daily_price(
     def is_date_filled(start_dt, last_dt):
         if not start_dt:
             return True
-
+        if start_dt.year < 1990:
+            raise HTTPException(status_code=400, detail="DateParse invalid warning, date format must be YYYY-MM-DD")
         last_dt = datetime.datetime.strptime(last_dt, "%Y%m%d").date()
         if start_dt < last_dt:
             return False
@@ -80,6 +81,8 @@ def get_daily_price(
         appkey=default_user.appkey,
         appsecret=default_user.appsecret,
     )
+    if base_date and base_date.year < 1990:
+        raise HTTPException(status_code=400, detail="DateParse invalid warning, date format must be YYYY-MM-DD")
 
     if isinstance(base_date, datetime.date):
         base_date = base_date.strftime("%Y%m%d")
