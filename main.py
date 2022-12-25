@@ -91,12 +91,17 @@ def get_daily_price(
     )
     try:
         resp = connector.send(access_token=access_token, payload=payload)
+        if not resp.prices:
+            return resp.dict()
+
         last_date = resp.prices[-1].base_date
         while not is_date_filled(start_dt=start_date, last_dt=last_date):
             next_payload: BasePayload = OverseaDailyPricePayload(
                 market_code=market_code, symbol=symbol, base_date=last_date
             )
             next_resp = connector.send(access_token=access_token, payload=next_payload)
+            if not next_resp.prices:
+                break
             last_date = next_resp.prices[-1].base_date
             resp.prices += [
                 p
