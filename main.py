@@ -103,11 +103,14 @@ def get_daily_price(
             if not next_resp.prices:
                 break
             last_date = next_resp.prices[-1].base_date
-            resp.prices += [
+            appendable_prices = [
                 p
                 for p in next_resp.prices[1:]
                 if p.base_date >= start_date.strftime("%Y%m%d")
             ]
+            if not appendable_prices:
+                break
+            resp.prices += appendable_prices
         return resp.dict()
     except ValidationError as e:
         logging.debug(str(e))
