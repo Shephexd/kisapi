@@ -256,29 +256,29 @@ class OverseaQuotePriceResponse(APIResponse):
 
 class OverseaBidOrderResponse(APIResponse):
     class OverseaBidOrderDetail(Response):
-        KRX_FWDG_ORD_ORGNO: str = Field(alias="krx_org_no", description="종목코드")
-        ODNO: str = Field(alias="ord_no")
-        ORD_TMD: str = Field(alias="order_time")
+        krx_fwdg_ord_orgno: str = Field(alias="krx_org_no", description="종목코드")
+        odno: str = Field(alias="ord_no")
+        ord_tmd: str = Field(alias="order_time")
 
-    detail: OverseaBidOrderDetail = Field(alias="output")
+    output: OverseaBidOrderDetail = Field(alias="detail")
 
 
 class OverseaAskOrderResponse(APIResponse):
     class OverseaAskOrderDetail(Response):
-        KRX_FWDG_ORD_ORGNO: str = Field(alias="krx_org_no", description="종목코드")
-        ord_no: str = Field(alias="ODNO")
-        order_time: str = Field(alias="ORD_TMD")
+        krx_fwdg_ord_orgno: str = Field(alias="krx_org_no", description="종목코드")
+        odno: str = Field(alias="ord_no")
+        ord_tmd: str = Field(alias="order_time")
 
-    detail: OverseaAskOrderDetail = Field(alias="output")
+    output: OverseaAskOrderDetail = Field(alias="detail")
 
 
 class OverseaChangeOrderResponse(APIResponse):
     class OverseaChangeOrderDetail(Response):
-        krx_org_no: str = Field(alias="KRX_FWDG_ORD_ORGNO", description="종목코드")
-        ord_no: str = Field(alias="ODNO")
-        order_time: str = Field(alias="ORD_TMD")
+        krx_fwdg_ord_orgno: str = Field(alias="krx_org_no", description="종목코드")
+        odno: str = Field(alias="ord_no")
+        ord_tmd: str = Field(alias="order_time")
 
-    detail: OverseaChangeOrderDetail = Field(alias="output")
+    output: OverseaChangeOrderDetail = Field(alias="detail")
 
 
 class OverseaUnexecutedListResponse(APIResponse):
