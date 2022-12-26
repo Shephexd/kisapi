@@ -132,50 +132,50 @@ class DomesticDailyPriceResponse(APIResponse):
 
 class OverseaBalanceResponse(APIResponse):
     class HoldingDetail(Response):
-        symbol: str = Field(alias="ovrs_pdno", description="상품번호")
-        name: str = Field(alias="ovrs_item_name", description="상품명", repr=False)
-        profit_loss: Decimal = Field(alias="frcr_evlu_pfls_amt", description="외화평가손익금액")
-        profit_loss_ratio: Decimal = Field(alias="evlu_pfls_rt", description="평가손익률")
-        purchase_avg_price: Decimal = Field(
-            alias="pchs_avg_pric", description="해당 종목의 매수 평균 단가"
+        ovrs_pdno: str = Field(alias="symbol", description="상품번호")
+        ovrs_item_name: str = Field(alias="name", description="상품명", repr=False)
+        frcr_evlu_pfls_amt: Decimal = Field(alias="profit_loss", description="외화평가손익금액")
+        evlu_pfls_rt: Decimal = Field(alias="profit_loss_ratio", description="평가손익률")
+        pchs_avg_pric: Decimal = Field(
+            alias="purchase_avg_price", description="해당 종목의 매수 평균 단가"
         )
-        holding_qty: Decimal = Field(alias="ovrs_cblc_qty", description="잔고수량")
-        ord_possible_qty: Decimal = Field(
-            alias="ord_psbl_qty", description="매도 가능한 주문 수량"
+        ovrs_cblc_qty: Decimal = Field(alias="holding_qty", description="잔고수량")
+        ord_psbl_qty: Decimal = Field(
+            alias="ord_possible_qty", description="매도 가능한 주문 수량"
         )
-        purchase_amt: Decimal = Field(
-            alias="frcr_pchs_amt1", description="해당 종목의 외화 기준 매입금액"
+        frcr_pchs_amt1: Decimal = Field(
+            alias="purchase_amt", description="해당 종목의 외화 기준 매입금액"
         )
-        eval_amt: Decimal = Field(alias="ovrs_stck_evlu_amt", description="평가금액")
-        price: Decimal = Field(alias="now_pric2", description="현재가격")
-        currency_code: str = Field(alias="tr_crcy_cd", description="거래통화코드")
+        ovrs_stck_evlu_amt: Decimal = Field(alias="eval_amt", description="평가금액")
+        now_pric2: Decimal = Field(alias="price", description="현재가격")
+        tr_crcy_cd: str = Field(alias="currency_code", description="거래통화코드")
 
     class BalanceDetail(Response):
-        foreign_purchase_amt: Decimal = Field(
-            alias="frcr_pchs_amt1", description="외화매입금액1"
+        frcr_pchs_amt1: Decimal = Field(
+            alias="foreign_purchase_amt", description="외화매입금액1"
         )
-        realized_profit_loss: Decimal = Field(
-            alias="ovrs_rlzt_pfls_amt", description="해외실현손익금액"
+        ovrs_rlzt_pfls_amt: Decimal = Field(
+            alias="realized_profit_loss", description="해외실현손익금액"
         )
-        total_profit_loss: Decimal = Field(alias="ovrs_tot_pfls", description="해외총손익")
-        realized_return: Decimal = Field(alias="rlzt_erng_rt", description="실현수익률")
-        total_eval_amt: Decimal = Field(alias="tot_evlu_pfls_amt", description="총평가금액")
-        total_return: Decimal = Field(alias="tot_pftrt", description="총수익률")
-        exchange_amt: Decimal = Field(
-            alias="frcr_buy_amt_smtl1", description="외화매수금액합계1"
+        ovrs_tot_pfls: Decimal = Field(alias="total_profit_loss", description="해외총손익")
+        rlzt_erng_rt: Decimal = Field(alias="realized_return", description="실현수익률")
+        tot_evlu_pfls_amt: Decimal = Field(alias="total_eval_amt", description="총평가금액")
+        tot_pftrt: Decimal = Field(alias="total_return", description="총수익률")
+        frcr_buy_amt_smtl1: Decimal = Field(
+            alias="foreign_buy_amt", description="외화매수금액합계1"
         )
-        realized_profit_loss2: Decimal = Field(
-            alias="ovrs_rlzt_pfls_amt2", description="해외실현손익금액2"
+        ovrs_rlzt_pfls_amt2: Decimal = Field(
+            alias="realized_profit_loss2", description="해외실현손익금액2"
         )
-        exchange_amt2: Decimal = Field(
-            alias="frcr_buy_amt_smtl2", description="외화매수금액합계2"
+        frcr_buy_amt_smtl2: Decimal = Field(
+            alias="foreign_buy_amt2", description="외화매수금액합계2"
         )
 
     search_key: str = Field(alias="ctx_area_fk200", description="연속조회검색조건", repr=False)
     next_key: str = Field(alias="ctx_area_nk200", description="연속조회키", repr=False)
 
-    holdings: List[HoldingDetail] = Field(alias="output1")
-    balance: BalanceDetail = Field(alias="output2")
+    output1: List[HoldingDetail] = Field(alias="holdings")
+    output2: BalanceDetail = Field(alias="balance")
 
     @validator("search_key", "next_key")
     def strip_str(cls, v: str):
@@ -318,13 +318,25 @@ class OverseaUnexecutedListResponse(APIResponse):
 class OverseaOrderHistoryResponse(APIResponse):
     class OverseaOrderHistoryRowResponse(Response):
         ord_dt: str = Field(alias="order_date", description="주문일자")
-        ord_gno_brno: str = Field(alias="order_branch_no", description="주문채번지점번호(계좌 개설 시 관리점으로 선택한 영업점의 고유번호)")
+        ord_gno_brno: str = Field(
+            alias="order_branch_no", description="주문채번지점번호(계좌 개설 시 관리점으로 선택한 영업점의 고유번호)"
+        )
         odno: str = Field(alias="order_no", description="주문번호(접수한 주문의 일련번호)")
-        orgn_odno: str = Field(alias="origin_order_no", description="원주문번호(정정 또는 취소 대상 주문의 일련번호)")
-        sll_buy_dvsn_cd: str = Field(alias="trade_type", description="매도매수구분코드 (01: 매도, 02: 매수)")
-        sll_buy_dvsn_cd_name: str = Field(alias="trade_type_name", description="매도매수구분코드명")
-        rvse_cncl_dvsn: str = Field(alias="cancel_code", description="정정취소구분(01: 정정 02: 취소)")
-        rvse_cncl_dvsn_name: str = Field(alias="cancel_code_name", description="정정취소구분명")
+        orgn_odno: str = Field(
+            alias="origin_order_no", description="원주문번호(정정 또는 취소 대상 주문의 일련번호)"
+        )
+        sll_buy_dvsn_cd: str = Field(
+            alias="trade_type", description="매도매수구분코드 (01: 매도, 02: 매수)"
+        )
+        sll_buy_dvsn_cd_name: str = Field(
+            alias="trade_type_name", description="매도매수구분코드명"
+        )
+        rvse_cncl_dvsn: str = Field(
+            alias="cancel_code", description="정정취소구분(01: 정정 02: 취소)"
+        )
+        rvse_cncl_dvsn_name: str = Field(
+            alias="cancel_code_name", description="정정취소구분명"
+        )
         pdno: str = Field(alias="symbol", description="상품번호")
         prdt_name: str = Field(alias="product_name", description="상품명")
         ft_ord_qty: str = Field(alias="ord_qty", description="주문수량")
@@ -334,12 +346,17 @@ class OverseaOrderHistoryResponse(APIResponse):
         ft_ccld_amt3: str = Field(alias="exec_amt", description="체결금액3")
         nccs_qty: str = Field(alias="unexec_qty", description="미체결수량")
         prcs_stat_name: str = Field(alias="status_name", description="처리상태명")
-        rjct_rson: str = Field(alias="reject_reason", description="거부사유(정상 처리되지 못하고 거부된 주문의 사유)")
+        rjct_rson: str = Field(
+            alias="reject_reason", description="거부사유(정상 처리되지 못하고 거부된 주문의 사유)"
+        )
         ord_tmd: str = Field(alias="order_time", description="주문시각(주문 접수 시간)")
         tr_mket_name: str = Field(alias="market_name", description="거래시장명")
         tr_natn: str = Field(alias="nation_code", description="거래국가")
         tr_natn_name: str = Field(alias="nation_name", description="거래국가명")
-        ovrs_excg_cd: str = Field(alias="market_code", description="해외거래소코드(NASD: 나스닥, NYSE : 뉴욕, AMEX : 아멕스, SEHK : 홍콩, SHAA : 중국상해, SZAA : 중국심천, TKSE : 일본")
+        ovrs_excg_cd: str = Field(
+            alias="market_code",
+            description="해외거래소코드(NASD: 나스닥, NYSE : 뉴욕, AMEX : 아멕스, SEHK : 홍콩, SHAA : 중국상해, SZAA : 중국심천, TKSE : 일본",
+        )
         tr_crcy_cd: str = Field(alias="currency_code", description="거래통화코드")
         dmst_ord_dt: str = Field(alias="order_date_kst", description="국내주문일자")
         thco_ord_tmd: str = Field(alias="order_time_kst", description="당사주문시각")
@@ -354,8 +371,8 @@ class OverseaOrderHistoryResponse(APIResponse):
 
     @property
     def has_next(self):
-        return self.header['tr_cont'] == "M"
+        return self.header["tr_cont"] == "M"
 
     @property
     def is_last(self):
-        return self.header['tr_cont'] == "D"
+        return self.header["tr_cont"] == "D"
