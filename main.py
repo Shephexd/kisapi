@@ -345,8 +345,8 @@ def get_unexecuted(
     response_model=OverseaOrderHistoryResponse,
 )
 def get_order_history(
-    start_date: str,
-    end_date: str,
+    start_date: datetime.date,
+    end_date: datetime.date,
     market_code: OverseaOrderMarketCode = "NASD",
     account_number: str = Header(default=None),
     access_token: Union[str, None] = Header(default=None),
@@ -358,8 +358,8 @@ def get_order_history(
     )
     payload: BasePayload = OverseaOrderHistoryNightPayload(
         account_number=account_number,
-        start_date=start_date,
-        end_date=end_date,
+        start_date=start_date.strftime("%Y%m%d"),
+        end_date=end_date.strftime("%Y%m%d"),
         market_code=market_code,
     )
     try:
