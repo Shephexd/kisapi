@@ -14,6 +14,7 @@ from .response import (
     OverseaAskOrderResponse,
     OverseaChangeOrderResponse,
     OverseaBalanceResponse,
+    OverseaPresentBalanceResponse,
     OverseaDailyPriceResponse,
     OverseaQuotePriceResponse,
     OverseaUnexecutedListResponse,
@@ -87,6 +88,31 @@ class OverseaBalancePayload(BaseAccountPayload):
     @property
     def response_class(self) -> type:
         return OverseaBalanceResponse
+
+
+class OverseaPresentBalancePayload(BaseAccountPayload):
+    tr_id = Field(default="CTRP6504R", description="Transaction ID", exclude=True)
+
+    base_currency: str = Field(
+        alias="WCRC_FRCR_DVSN_CD", default="02", description="원화외화구분"
+    )
+    national_code: str = Field(
+        alias="NATN_CD", default="840", description="국가코드", repr=False
+    )
+    market_code: str = Field(
+        alias="TR_MKET_CD", default="00", description="거래시장코드", repr=False
+    )
+    search_code: str = Field(
+        alias="INQR_DVSN_CD", default="00", description="조회구분코드", repr=False
+    )
+
+    @property
+    def url_path(self):
+        return "/uapi/overseas-stock/v1/trading/inquire-present-balance"
+
+    @property
+    def response_class(self) -> type:
+        return OverseaPresentBalanceResponse
 
 
 class OverseaUnexecutedListPayload(BaseAccountPayload):

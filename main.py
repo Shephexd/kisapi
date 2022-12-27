@@ -18,6 +18,7 @@ from kis.connector.payload.oversea import (
     OverseaUpdateOrderPayload,
     OverseaCancelOrderPayload,
     OverseaBalancePayload,
+    OverseaPresentBalancePayload,
     OverseaUnexecutedListPayload,
     OverseaOrderHistoryPayload,
     OverseaOrderHistoryNightPayload,
@@ -26,6 +27,7 @@ from kis.connector.payload.enum import OverseaPriceMarketCode, OverseaOrderMarke
 from kis.connector.payload.response import (
     TokenResponse,
     OverseaBalanceResponse,
+    OverseaPresentBalanceResponse,
     OverseaDailyPriceResponse,
     OverseaQuotePriceResponse,
     OverseaBidOrderResponse,
@@ -159,6 +161,26 @@ def get_balance(
         appsecret=default_user.appsecret,
     )
     payload = OverseaBalancePayload(account_number=account_number)
+    resp = connector.send(payload=payload, access_token=access_token)
+    return resp
+
+
+@app.get(
+    "/api/v1/oversea/accounts/present-balance",
+    response_model=OverseaPresentBalanceResponse,
+    response_model_exclude={"search_key", "next_key"},
+    tags=["account"],
+)
+def get_present_balance(
+    account_number: str = Header(default=None),
+    access_token: Union[str, None] = Header(default=None),
+) -> OverseaPresentBalanceResponse:
+    connector = KISConnector(
+        apihost=default_user.apihost,
+        appkey=default_user.appkey,
+        appsecret=default_user.appsecret,
+    )
+    payload = OverseaPresentBalancePayload(account_number=account_number)
     resp = connector.send(payload=payload, access_token=access_token)
     return resp
 
